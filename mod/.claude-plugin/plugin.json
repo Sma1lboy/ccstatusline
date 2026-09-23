@@ -1,0 +1,6 @@
+{
+  "name": "ccstatusline",
+  "version": "0.1.0",
+  "description": "ccstatusline as a Claude Code mod: your ccstatusline settings drawn under the prompt from what the engine reports, plus why the last turn missed the prompt cache and a per-project cost ledger (/cache-ledger).",
+  "author": { "name": "Sma1lboy" }
+}

@@ -1,0 +1,4 @@
+{
+  "description": "ccstatusline mod: the configured lines under the prompt and the /cache-ledger report",
+  "modules": ["./register.tsx"]
+}

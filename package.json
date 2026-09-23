@@ -34,6 +34,8 @@
     "lint": "bun tsc --noEmit && eslint . --config eslint.config.js --max-warnings=0",
     "lint:fix": "bun tsc --noEmit && eslint . --config eslint.config.js --max-warnings=0 --fix",
     "docs": "typedoc",
+    "mod:typecheck": "tsc -p mod/tsconfig.json",
+    "mod:test": "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude plugin test mod",
     "docs:clean": "rm -rf typedoc"
   },
   "devDependencies": {

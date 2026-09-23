@@ -27,5 +27,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+  // The mod is its own TypeScript project (mod/tsconfig.json), typed against Claude Code.
+  "exclude": ["mod", "node_modules", "dist"]
 }

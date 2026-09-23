@@ -1,0 +1,11 @@
+{
+  "name": "ccstatusline",
+  "owner": { "name": "Sma1lboy" },
+  "plugins": [
+    {
+      "name": "ccstatusline",
+      "source": "./mod",
+      "description": "ccstatusline as a Claude Code mod: your ccstatusline settings drawn under the prompt from what the engine reports, plus cache-miss reasons and a per-project cost ledger."
+    }
+  ]
+}

@@ -140,6 +140,7 @@ export default ts.config([
         ignores: [
             '**/dist/',
             '**/node_modules/',
+            'mod/',
             '**/*.js',
             '!eslint.config.js'
         ]
