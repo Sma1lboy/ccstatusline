@@ -10,7 +10,8 @@ import {
 
 // Installs mod/ as a Claude Code plugin from this repository's marketplace.
 export const MOD_MARKETPLACE = 'Sma1lboy/ccstatusline';
-export const MOD_PLUGIN = 'ccstatusline@ccstatusline';
+export const MOD_MARKETPLACE_NAME = 'ccstatusline';
+export const MOD_PLUGIN = `ccstatusline@${MOD_MARKETPLACE_NAME}`;
 export const HOOKS_ENV = 'CLAUDE_CODE_ENABLE_FUNCTION_HOOKS';
 
 /** How Claude Code gets function hooks switched on; mods load only with it. */
@@ -55,7 +56,10 @@ export async function enableHooksInClaudeSettings(): Promise<void> {
 export function getModInstallCommands(): string[][] {
     return [
         ['claude', 'plugin', 'marketplace', 'add', MOD_MARKETPLACE],
-        ['claude', 'plugin', 'install', MOD_PLUGIN]
+        // add and install leave an existing marketplace or plugin as it was; these bring it to the latest
+        ['claude', 'plugin', 'marketplace', 'update', MOD_MARKETPLACE_NAME],
+        ['claude', 'plugin', 'install', MOD_PLUGIN],
+        ['claude', 'plugin', 'update', MOD_PLUGIN]
     ];
 }
 
