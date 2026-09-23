@@ -12,6 +12,10 @@ import {
     addHooksAlias,
     getShellRcPath
 } from '../mod-install';
+import {
+    getPackageVersion,
+    getUpstreamVersion
+} from '../terminal';
 
 describe('mod install', () => {
     it('picks the rc file of the login shell', () => {
@@ -33,5 +37,12 @@ describe('mod install', () => {
         expect(text.startsWith('export PATH=/x:$PATH\n')).toBe(true);
         expect(text.split(ALIAS_LINE)).toHaveLength(2);
         fs.rmSync(dir, { recursive: true });
+    });
+});
+
+describe('fork version', () => {
+    it('installs of the upstream status line command use a version upstream publishes', () => {
+        expect(getPackageVersion()).toMatch(/-mod\.\d+$/);
+        expect(getUpstreamVersion()).toMatch(/^\d+\.\d+\.\d+$/);
     });
 });

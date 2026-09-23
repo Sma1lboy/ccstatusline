@@ -111,17 +111,28 @@ async function readCommands($: EngineInterface, now: number): Promise<void> {
   commands = next
 }
 
-/** mod-settings.json when present, so the mod line can differ; else the classic line's settings.json. */
-async function readSettings($: EngineInterface): Promise<Settings> {
-  const dir = `${await $.env.get('HOME')}/.config/ccstatusline`
-  for (const name of ['mod-settings.json', 'settings.json']) {
-    try {
-      return settingsOf(JSON.parse(await $.fs.read(`${dir}/${name}`)))
-    } catch {
-      // missing or unreadable: try the next
-    }
+/** The settings.json the ccstatusline TUI edits, as text; null when unreadable. */
+async function readSettingsText($: EngineInterface): Promise<string | null> {
+  try {
+    return await $.fs.read(`${await $.env.get('HOME')}/.config/ccstatusline/settings.json`)
+  } catch {
+    return null
   }
-  return DEFAULT_SETTINGS
+}
+
+let settingsText: string | null = null
+
+/** Rereads the settings; true when they changed since the last read. */
+async function reloadSettings($: EngineInterface): Promise<boolean> {
+  const text = await readSettingsText($)
+  if (text === settingsText) return false
+  settingsText = text
+  try {
+    settings = text === null ? DEFAULT_SETTINGS : settingsOf(JSON.parse(text))
+  } catch {
+    settings = DEFAULT_SETTINGS
+  }
+  return true
 }
 
 function snapshot(now: number): Snapshot {
@@ -204,7 +215,7 @@ export const register: Register = on => {
     } catch {
       book = emptyBook()
     }
-    settings = await readSettings($)
+    await reloadSettings($)
     try {
       project = (await $.session.repo())?.root ?? (await $.session.root())
     } catch {
@@ -225,7 +236,9 @@ export const register: Register = on => {
     $.clock.every(TICK_MS, () => {
       void (async () => {
         const at = await $.clock.now()
-        if (at - commandsAt >= COMMAND_EVERY_MS) await readCommands($, at)
+        // An edit saved in the ccstatusline TUI shows within a tick.
+        const changed = await reloadSettings($)
+        if (changed || at - commandsAt >= COMMAND_EVERY_MS) await readCommands($, at)
         await refresh($)
       })()
     })

@@ -47,7 +47,7 @@
 >
 > The install runs `claude plugin marketplace add Sma1lboy/ccstatusline` and `claude plugin install ccstatusline@ccstatusline`, then, with your choice, switches on function hooks (mods are early access and load only with `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`): a `claude` alias in your shell rc, the `env` of Claude Code's settings.json, or neither. It shows every command and file before running anything.
 >
-> The mod reads `~/.config/ccstatusline/mod-settings.json` when it exists, else the same `settings.json` as the status line. `cache-miss-reason` and `project-cost-today` are in the TUI's widget list; the status line command draws nothing for them. Not drawn by the mod yet: Powerline, flex separators, and widgets it has no source for (they are skipped). Limits and the list of widgets it draws: [`mod/README.md`](mod/README.md).
+> The mod reads the same `settings.json` the TUI edits and the status line reads; a change saved in the TUI shows under the prompt within 5 seconds, no restart. To try a layout, use the TUI's Import Config. `cache-miss-reason` and `project-cost-today` are in the TUI's widget list; the status line command draws nothing for them. Not drawn by the mod yet: Powerline, flex separators, and widgets it has no source for (they are skipped). Limits and the list of widgets it draws: [`mod/README.md`](mod/README.md).
 <br />
 
 ## 📚 Table of Contents

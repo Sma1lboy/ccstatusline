@@ -8,6 +8,12 @@ import {
     writeCachedWidth
 } from './terminal-width-cache';
 
+// The upstream ccstatusline release this fork's version is based on (2.2.30-mod.1 -> 2.2.30).
+// The status line command installs upstream ccstatusline, so its pinned version is this one.
+export function getUpstreamVersion(): string {
+    return getPackageVersion().replace(/-mod\.\d+$/, '');
+}
+
 // Get package version
 // __PACKAGE_VERSION__ will be replaced at build time
 const PACKAGE_VERSION = '__PACKAGE_VERSION__';

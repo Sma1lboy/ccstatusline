@@ -1,5 +1,4 @@
-// The ccstatusline settings format: the mod reads ~/.config/ccstatusline/mod-settings.json
-// when it exists, else the settings.json the classic status line reads.
+// The ccstatusline settings format, read from the settings.json the ccstatusline TUI edits.
 
 export type WidgetItem = {
   id?: string

@@ -22,14 +22,14 @@ const GIT: Record<string, string> = {
 }
 
 /** The world under the plugin: a repo at /w/rove whose session cost the test moves. */
-function world(on: On, settings: unknown = SETTINGS, files: Record<string, unknown> = {}) {
+function world(on: On, settings: unknown = SETTINGS) {
   const cost = { usd: 0 }
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   on('command.register', ($, e) => ({ value: { command: e.name } }))
   on('session.repo', () => ({ value: { root: '/w/rove', remote: null, internal: false, name: 'rove' } }))
   on('session.model', () => ({ value: 'claude-opus-5-5' }))
   on('session.usage', () => ({ value: { context: { window: 1_000_000, percent: 42, tokens: 180_600 }, rateLimits: [], cost: { ...cost } } }))
-  const disk: Record<string, unknown> = { '/Users/me/.config/ccstatusline/settings.json': settings, ...files }
+  const disk: Record<string, unknown> = { '/Users/me/.config/ccstatusline/settings.json': settings }
   on('fs.read', ($, e) => {
     if (!(e.path in disk)) throw new Error(`ENOENT ${e.path}`)
     return { value: JSON.stringify(disk[e.path]) }
@@ -43,7 +43,7 @@ function world(on: On, settings: unknown = SETTINGS, files: Record<string, unkno
   on('turn.complete', ($, e) => ({ text: e.answer }))
   mock.store(on)
   mock.env(on, { HOME: '/Users/me' })
-  return { cost, clock: mock.clock(on, { now: Date.UTC(2026, 8, 23, 12) }) }
+  return { cost, disk, clock: mock.clock(on, { now: Date.UTC(2026, 8, 23, 12) }) }
 }
 
 /** The text a drawing shows, children flattened in order. */
@@ -92,13 +92,16 @@ describe('register', () => {
     expect(textOf(await ui.drawn())).toContain('opus 5.5 | Ctx: ███░░░░░ 42%')
   })
 
-  test('mod-settings.json, when present, is drawn instead of the classic settings.json', async ($, on) => {
-    world(on, SETTINGS, {
-      '/Users/me/.config/ccstatusline/mod-settings.json': { lines: [[{ id: 'x', type: 'custom-text', customText: 'only in the mod' }]] },
-    })
+  test('an edit saved to settings.json is drawn within a tick, without a restart', async ($, on) => {
+    const w = world(on)
     await $.session.start({ surface: 'terminal', isInteractive: true, cwd: '/w/rove' })
-    const text = textOf(await (await $.ui.mount(HINT as never)).drawn())
-    expect(text).toContain('only in the mod')
+    const ui = await $.ui.mount(HINT as never)
+    expect(textOf(await ui.drawn())).toContain('⎇ main')
+
+    w.disk['/Users/me/.config/ccstatusline/settings.json'] = { lines: [[{ id: 'x', type: 'custom-text', customText: 'edited in the TUI' }]] }
+    await w.clock.advance(5000)
+    const text = textOf(await ui.drawn())
+    expect(text).toContain('edited in the TUI')
     expect(text).not.toContain('⎇ main')
   })
 

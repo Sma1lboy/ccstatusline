@@ -74,7 +74,10 @@ import {
     installPowerlineFonts,
     type PowerlineFontStatus
 } from '../utils/powerline';
-import { getPackageVersion } from '../utils/terminal';
+import {
+    getPackageVersion,
+    getUpstreamVersion
+} from '../utils/terminal';
 import {
     checkForUpdates,
     compareVersions,
@@ -577,7 +580,7 @@ export const App: React.FC = () => {
                 ? inspectActiveGlobalCommand({ commandAvailability })
                 : null;
             const effectiveInstallation = getPathInferredInstallation(installation, activeCommand);
-            const mismatch = getPinnedVersionMismatch(effectiveInstallation, getPackageVersion(), 'ccstatusline');
+            const mismatch = getPinnedVersionMismatch(effectiveInstallation, getUpstreamVersion(), 'ccstatusline');
             if (mismatch) {
                 return;
             }
@@ -653,7 +656,7 @@ export const App: React.FC = () => {
                 action: async () => {
                     try {
                         if (selection.globalInstallCommand) {
-                            await runGlobalPackageInstall(selection.packageManager, getPackageVersion());
+                            await runGlobalPackageInstall(selection.packageManager, getUpstreamVersion());
                         }
 
                         await installStatusLine({
@@ -745,7 +748,7 @@ export const App: React.FC = () => {
                     setFlashMessage(null);
                     setFlowNotice({
                         title: 'Mod Installed',
-                        message: `The mod draws your lines under the prompt. ${next}\n\nIt reads ~/.config/ccstatusline/mod-settings.json when that file exists, else the same settings.json as the status line.`,
+                        message: `The mod draws your lines under the prompt. ${next}\n\nIt reads the settings.json this tool edits; a saved change shows within 5 seconds.`,
                         color: 'green',
                         continueScreen: 'main'
                     });
@@ -779,7 +782,7 @@ export const App: React.FC = () => {
         const effectiveUpdateInstallation = getPathInferredInstallation(installation, activeCommand);
         const currentUpdateVersion = effectiveUpdateInstallation.method === 'pinned' && effectiveUpdateInstallation.installedVersion
             ? effectiveUpdateInstallation.installedVersion
-            : getPackageVersion();
+            : getUpstreamVersion();
 
         void checkForUpdates({
             currentVersion: currentUpdateVersion,
@@ -1365,7 +1368,7 @@ export const App: React.FC = () => {
                 {screen === 'install' && (
                     <InstallMenu
                         commandAvailability={commandAvailability}
-                        currentVersion={getPackageVersion()}
+                        currentVersion={getUpstreamVersion()}
                         existingStatusLine={existingStatusLine}
                         onSelect={(selection) => {
                             setMenuSelections(prev => ({
