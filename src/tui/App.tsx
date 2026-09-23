@@ -57,6 +57,16 @@ import {
     type GlobalPackageInstallation,
     type GlobalPackageManager
 } from '../utils/global-package-manager';
+import {
+    ALIAS_LINE,
+    HOOKS_ENV,
+    addHooksAlias,
+    enableHooksInClaudeSettings,
+    getModInstallCommands,
+    getShellRcPath,
+    installModPlugin,
+    type ModHooksMethod
+} from '../utils/mod-install';
 import { openExternalUrl } from '../utils/open-url';
 import {
     checkPowerlineFonts,
@@ -704,6 +714,55 @@ export const App: React.FC = () => {
         });
     }, [getGlobalResolutionWarning, supportsRefreshInterval]);
 
+    const handleModInstall = useCallback((hooks: ModHooksMethod) => {
+        const rcPath = getShellRcPath();
+        const hooksStep = hooks === 'alias'
+            ? `Append to ${rcPath}: ${ALIAS_LINE}`
+            : hooks === 'settings'
+                ? `Set ${HOOKS_ENV}=1 in env of ${getClaudeSettingsPath()}`
+                : `Nothing else: start Claude Code with ${HOOKS_ENV}=1 claude`;
+        const steps = [
+            ...getModInstallCommands().map(argv => `Run: ${argv.join(' ')}`),
+            hooksStep
+        ];
+
+        setConfirmDialog({
+            message: `Install ccstatusline as a Claude Code mod:\n\n${steps.join('\n')}\n\nYour status line settings are left as they are. Continue?`,
+            cancelScreen: 'install',
+            action: async () => {
+                try {
+                    installModPlugin();
+                    if (hooks === 'alias') {
+                        addHooksAlias(rcPath);
+                    } else if (hooks === 'settings') {
+                        await enableHooksInClaudeSettings();
+                    }
+                    const next = hooks === 'alias'
+                        ? `Open a new shell (or run \`source ${rcPath}\`), then start claude.`
+                        : hooks === 'settings'
+                            ? 'Restart Claude Code.'
+                            : `Start Claude Code with \`${HOOKS_ENV}=1 claude\`.`;
+                    setFlashMessage(null);
+                    setFlowNotice({
+                        title: 'Mod Installed',
+                        message: `The mod draws your lines under the prompt. ${next}\n\nIt reads ~/.config/ccstatusline/mod-settings.json when that file exists, else the same settings.json as the status line.`,
+                        color: 'green',
+                        continueScreen: 'main'
+                    });
+                    setScreen('flowNotice');
+                } catch (error) {
+                    setFlashMessage({
+                        text: `✗ Mod install failed: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}`,
+                        color: 'red'
+                    });
+                    setScreen('install');
+                }
+                setConfirmDialog(null);
+            }
+        });
+        setScreen('confirm');
+    }, []);
+
     const handleInstallMenuCancel = useCallback(() => {
         setMenuSelections(clearInstallMenuSelection);
         setScreen('main');
@@ -1315,6 +1374,7 @@ export const App: React.FC = () => {
                             }));
                             handleInstallSelection(selection);
                         }}
+                        onSelectMod={handleModInstall}
                         onCancel={handleInstallMenuCancel}
                         initialPackageSelection={menuSelections.installPackage}
                     />

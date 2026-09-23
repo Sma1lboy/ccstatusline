@@ -75,6 +75,7 @@ describe('InstallMenu', () => {
                 currentVersion: '2.2.13',
                 existingStatusLine: null,
                 onSelect: vi.fn(),
+                onSelectMod: vi.fn(),
                 onCancel
             }),
             {
@@ -113,6 +114,7 @@ describe('InstallMenu', () => {
                 currentVersion: '2.2.13',
                 existingStatusLine: null,
                 onSelect: vi.fn(),
+                onSelectMod: vi.fn(),
                 onCancel: vi.fn()
             }),
             {
@@ -151,6 +153,7 @@ describe('InstallMenu', () => {
                 currentVersion: '2.2.13',
                 existingStatusLine: null,
                 onSelect: vi.fn(),
+                onSelectMod: vi.fn(),
                 onCancel: vi.fn()
             }),
             {
@@ -194,6 +197,7 @@ describe('InstallMenu', () => {
                 currentVersion: '2.2.13',
                 existingStatusLine: null,
                 onSelect: vi.fn(),
+                onSelectMod: vi.fn(),
                 onCancel: vi.fn()
             }),
             {
@@ -236,6 +240,7 @@ describe('InstallMenu', () => {
                 currentVersion: '2.2.13',
                 existingStatusLine: null,
                 onSelect: vi.fn(),
+                onSelectMod: vi.fn(),
                 onCancel
             }),
             {
@@ -259,6 +264,59 @@ describe('InstallMenu', () => {
 
             expect(onCancel).not.toHaveBeenCalled();
             expect(stdout.getOutput()).toContain('Select update style');
+        } finally {
+            instance.unmount();
+            instance.cleanup();
+            stdin.destroy();
+            stdout.destroy();
+            stderr.destroy();
+        }
+    });
+    it('the mod style asks how to switch on function hooks and passes the choice on', async () => {
+        const stdin = createMockStdin();
+        const stdout = createMockStdout();
+        const stderr = createMockStdout();
+        const onSelect = vi.fn();
+        const onSelectMod = vi.fn();
+        const instance = render(
+            React.createElement(InstallMenu, {
+                commandAvailability: ALL_AVAILABLE,
+                currentVersion: '2.2.13',
+                existingStatusLine: null,
+                onSelect,
+                onSelectMod,
+                onCancel: vi.fn()
+            }),
+            {
+                stdin,
+                stdout,
+                stderr,
+                debug: true,
+                exitOnCtrlC: false,
+                patchConsole: false
+            }
+        );
+
+        try {
+            await flushInk();
+            expect(stdout.getOutput()).toContain('Claude Code mod');
+
+            stdin.write('\u001B[B');
+            await flushInk();
+            stdin.write('\u001B[B');
+            await flushInk();
+            stdin.write('\r');
+            await flushInk();
+
+            const output = stdout.getOutput();
+            expect(output).toContain('Switch on function hooks with:');
+            expect(output).toContain('alias claude=\'CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude\'');
+
+            stdin.write('\r');
+            await flushInk();
+
+            expect(onSelectMod).toHaveBeenCalledWith('alias');
+            expect(onSelect).not.toHaveBeenCalled();
         } finally {
             instance.unmount();
             instance.cleanup();

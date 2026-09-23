@@ -13,6 +13,12 @@ import {
     type PackageCommandAvailability,
     type StatusLineCommandMode
 } from '../../utils/claude-settings';
+import {
+    ALIAS_LINE,
+    HOOKS_ENV,
+    getShellRcPath,
+    type ModHooksMethod
+} from '../../utils/mod-install';
 
 import {
     List,
@@ -36,11 +42,13 @@ export interface InstallMenuProps {
     currentVersion: string;
     existingStatusLine: string | null;
     onSelect: (selection: InstallSelection) => void;
+    onSelectMod: (hooks: ModHooksMethod) => void;
     onCancel: () => void;
     initialPackageSelection?: number;
 }
 
-type InstallStep = 'style' | 'manager';
+type InstallStep = 'style' | 'manager' | 'mod';
+type StyleChoice = InstallUpdateStyle | 'mod';
 
 const AUTO_UPDATE_DESCRIPTION = 'Runs `@latest` through npx/bunx. Stays current automatically, with a small startup cost when the package runner checks or resolves the package. Because it follows the latest published package, pinned install is available if you prefer explicit updates.';
 
@@ -48,7 +56,29 @@ function getPinnedDescription(currentVersion: string): string {
     return `Installs \`ccstatusline@${currentVersion}\` globally and Claude Code runs \`ccstatusline\`. Fast on each render because Claude Code runs the installed ccstatusline binary directly. The version changes only when you update the global install.`;
 }
 
-function getStyleItems(currentVersion: string): ListEntry<InstallUpdateStyle>[] {
+const MOD_DESCRIPTION = 'Installs this repository as a Claude Code plugin that draws your lines under the prompt, from what Claude Code reports instead of the transcript. It adds cache-miss reasons and a per-project cost ledger. Mods are early access: Claude Code loads them only with function hooks switched on, chosen next.';
+
+function getModHooksItems(): ListEntry<ModHooksMethod>[] {
+    return [
+        {
+            label: `Shell alias in ${getShellRcPath()}`,
+            value: 'alias',
+            description: `Appends \`${ALIAS_LINE}\`. Only \`claude\` started from a new shell gets mods; other launchers are untouched.`
+        },
+        {
+            label: 'Claude Code settings.json env',
+            value: 'settings',
+            description: `Sets ${HOOKS_ENV}=1 in the settings every Claude Code session reads, including ones other tools start.`
+        },
+        {
+            label: 'Neither',
+            value: 'none',
+            description: `Installs the plugin only. Start Claude Code with \`${HOOKS_ENV}=1 claude\` to see it.`
+        }
+    ];
+}
+
+function getStyleItems(currentVersion: string): ListEntry<StyleChoice>[] {
     return [
         {
             label: 'Pinned global install',
@@ -59,6 +89,11 @@ function getStyleItems(currentVersion: string): ListEntry<InstallUpdateStyle>[] 
             label: 'Auto-update',
             value: 'auto-update',
             description: AUTO_UPDATE_DESCRIPTION
+        },
+        {
+            label: 'Claude Code mod',
+            value: 'mod',
+            description: MOD_DESCRIPTION
         }
     ];
 }
@@ -143,6 +178,7 @@ export const InstallMenu: React.FC<InstallMenuProps> = ({
     currentVersion,
     existingStatusLine,
     onSelect,
+    onSelectMod,
     onCancel,
     initialPackageSelection = 0
 }) => {
@@ -151,7 +187,7 @@ export const InstallMenu: React.FC<InstallMenuProps> = ({
 
     useInput((_, key) => {
         if (key.escape) {
-            if (step === 'manager') {
+            if (step === 'manager' || step === 'mod') {
                 setStep('style');
                 return;
             }
@@ -190,6 +226,11 @@ export const InstallMenu: React.FC<InstallMenuProps> = ({
                                 return;
                             }
 
+                            if (value === 'mod') {
+                                setStep('mod');
+                                return;
+                            }
+
                             setUpdateStyle(value);
                             setStep('manager');
                         }}
@@ -223,13 +264,39 @@ export const InstallMenu: React.FC<InstallMenuProps> = ({
                 </>
             )}
 
-            <Box marginTop={2}>
-                <Text dimColor>
-                    The selected command will be written to
-                    {' '}
-                    {getClaudeSettingsPath()}
-                </Text>
-            </Box>
+            {step === 'mod' && (
+                <>
+                    <Box>
+                        <Text dimColor>Switch on function hooks with:</Text>
+                    </Box>
+
+                    <List
+                        color='blue'
+                        marginTop={1}
+                        items={getModHooksItems()}
+                        onSelect={(value) => {
+                            if (value === 'back') {
+                                setStep('style');
+                                return;
+                            }
+
+                            onSelectMod(value);
+                        }}
+                        initialSelection={0}
+                        showBackButton={true}
+                    />
+                </>
+            )}
+
+            {step !== 'mod' && (
+                <Box marginTop={2}>
+                    <Text dimColor>
+                        The selected command will be written to
+                        {' '}
+                        {getClaudeSettingsPath()}
+                    </Text>
+                </Box>
+            )}
 
             <Box marginTop={1}>
                 <Text dimColor>Press Enter to select, ESC to go back</Text>

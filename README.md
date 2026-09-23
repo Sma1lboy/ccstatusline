@@ -28,6 +28,26 @@
 ![Demo](https://raw.githubusercontent.com/sirmalloc/ccstatusline/main/screenshots/demo.gif)
 
 </div>
+
+> ## This fork: ccstatusline as a Claude Code mod
+>
+> [Claude Code mods](https://github.com/anthropics/claude-code/issues/91870) are plugins that run TypeScript inside Claude Code. This fork adds one ([`mod/`](mod)) that draws your ccstatusline settings under the prompt. The status line command gets a JSON payload and parses the transcript; the mod reads Claude Code's own figures instead:
+>
+> | | status line command | mod |
+> | --- | --- | --- |
+> | Context, cost | payload / transcript | `$.session.usage()`, what `/context` and `/cost` show |
+> | Output speed | transcript timestamps, the wait for the first token included | each response timed from its first streamed chunk |
+> | Cache hit, read, write | transcript | the turn's token counts; the miss judged on its first request |
+> | Why the cache missed | — | `cache-miss-reason`: `idle 7m > 5m ttl`, `model a→b`, `after compact`, `first turn` |
+> | Cost across sessions | — | `project-cost-today`, and `/cache-ledger`: this project by day, every project today |
+>
+> ```
+> npx @sma1lboy/ccstatusline     # the same TUI; Install → Claude Code mod
+> ```
+>
+> The install runs `claude plugin marketplace add Sma1lboy/ccstatusline` and `claude plugin install ccstatusline@ccstatusline`, then, with your choice, switches on function hooks (mods are early access and load only with `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1`): a `claude` alias in your shell rc, the `env` of Claude Code's settings.json, or neither. It shows every command and file before running anything.
+>
+> The mod reads `~/.config/ccstatusline/mod-settings.json` when it exists, else the same `settings.json` as the status line. `cache-miss-reason` and `project-cost-today` are in the TUI's widget list; the status line command draws nothing for them. Not drawn by the mod yet: Powerline, flex separators, and widgets it has no source for (they are skipped). Limits and the list of widgets it draws: [`mod/README.md`](mod/README.md).
 <br />
 
 ## 📚 Table of Contents

@@ -1,5 +1,5 @@
 {
-  "name": "ccstatusline",
+  "name": "@sma1lboy/ccstatusline",
   "version": "2.2.30",
   "bugs": {
     "url": "https://github.com/sirmalloc/ccstatusline/issues"
@@ -8,6 +8,9 @@
   "main": "./dist/ccstatusline.js",
   "module": "./dist/ccstatusline.js",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "ccstatusline": "./dist/ccstatusline.js"
   },
