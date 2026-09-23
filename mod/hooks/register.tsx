@@ -14,6 +14,8 @@ const TICK_MS = 5000
 const COMMAND_EVERY_MS = 30_000
 /** SGR color codes, stripped from a custom command's output. */
 const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g')
+/** A response streamed for less than this is too short to time. */
+const SPEED_MIN_MS = 500
 const REFRESH_TOOLS = new Set(['Bash', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
 
 let settings: Settings = DEFAULT_SETTINGS
@@ -243,8 +245,8 @@ export const register: Register = on => {
   })
 
   // Output speed counts from the response's first chunk, not from the request:
-  // the wait before it is the prompt being read. The text chunks themselves can
-  // arrive in one burst, so the first chunk of any kind is the start.
+  // the wait before it is the prompt being read. A short response can reach the
+  // hook in one burst, so a response streamed for under SPEED_MIN_MS is left out.
   on('turn.step', async function* ($, e, next) {
     const stream = next(e)
     let firstAt: number | null = null
@@ -256,9 +258,10 @@ export const register: Register = on => {
     }
     const result = r.value
     if (result.usage) {
-      if (firstAt !== null) {
+      const took = firstAt === null ? 0 : (await $.clock.now()) - firstAt
+      if (took >= SPEED_MIN_MS) {
         outTokens += result.usage.output_tokens
-        streamMs += (await $.clock.now()) - firstAt
+        streamMs += took
       }
       if (e.index === 0 && e.agentId === undefined) firstStep = result.usage
     }
